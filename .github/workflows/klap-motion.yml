@@ -1,0 +1,64 @@
+name: Klap Motion Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_video_url:
+        description: Public URL of the source video
+        required: true
+        type: string
+      language:
+        description: Source language
+        required: false
+        default: es
+        type: string
+      style_preset_id:
+        description: Optional Klap style preset id
+        required: false
+        type: string
+
+jobs:
+  submit-motion:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Submit video to Klap
+        env:
+          KLAP_API_KEY: ${{ secrets.KLAP_API_KEY_VIDEO }}
+          SOURCE_VIDEO_URL: ${{ inputs.source_video_url }}
+          LANGUAGE: ${{ inputs.language }}
+          STYLE_PRESET_ID: ${{ inputs.style_preset_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${KLAP_API_KEY:-}" ]; then
+            echo "KLAP_API_KEY_VIDEO is not configured"
+            exit 1
+          fi
+
+          if [ -n "${STYLE_PRESET_ID:-}" ]; then
+            BODY=$(jq -n \
+              --arg url "$SOURCE_VIDEO_URL" \
+              --arg lang "$LANGUAGE" \
+              --arg preset "$STYLE_PRESET_ID" \
+              '{source_video_url:$url,language:$lang,style_preset_id:$preset,editing_options:{captions:true,reframe:true}}')
+          else
+            BODY=$(jq -n \
+              --arg url "$SOURCE_VIDEO_URL" \
+              --arg lang "$LANGUAGE" \
+              '{source_video_url:$url,language:$lang,editing_options:{captions:true,reframe:true}}')
+          fi
+
+          curl --fail-with-body --silent --show-error \
+            -X POST "https://api.klap.app/v2/tasks/video-to-video" \
+            -H "Authorization: Bearer ${KLAP_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d "$BODY" | tee klap-task.json
+
+      - name: Upload task receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: klap-task-receipt
+          path: klap-task.json
+          retention-days: 7
