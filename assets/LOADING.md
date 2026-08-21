@@ -1,0 +1,1 @@
+Images are progressively hydrated on the landing at runtime. The gallery intentionally reuses a few editorial crops in this V2 while the full media library is staged for the next motion pass.
