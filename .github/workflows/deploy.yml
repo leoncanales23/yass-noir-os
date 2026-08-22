@@ -19,6 +19,46 @@ jobs:
         with:
           node-version: 20
 
+      - name: Prepare landing image overrides
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old_img = '<img data-b64="/assets/editorial-03.b64" alt="Yass Noir fragment">'
+          new_img = '<img src="/assets/yass-doorway-v1.webp?v=1" alt="Yass Noir doorway" loading="lazy" decoding="async">'
+          if old_img not in s:
+              raise SystemExit('Archive teaser image hook not found')
+          s = s.replace(old_img, new_img, 1)
+
+          s = s.replace(
+              '.frame.teaser img{object-position:62% 28%;filter:blur(7px) saturate(.6) contrast(1.12) brightness(.34);transform:scale(1.14)}',
+              '.frame.teaser img{object-position:72% 34%;filter:blur(2px) saturate(.72) contrast(1.08) brightness(.54);transform:scale(1.06)}',
+              1
+          )
+          s = s.replace(
+              '.frame.teaser:hover img{filter:blur(4px) saturate(.66) contrast(1.1) brightness(.42);transform:scale(1.1)}',
+              '.frame.teaser:hover img{filter:blur(.5px) saturate(.8) contrast(1.08) brightness(.64);transform:scale(1.03)}',
+              1
+          )
+          s = s.replace(
+              '.frame.teaser img{object-position:58% 28%;filter:blur(6px) saturate(.6) contrast(1.1) brightness(.34);transform:scale(1.13)}',
+              '.frame.teaser img{object-position:70% 34%;filter:blur(2px) saturate(.72) contrast(1.08) brightness(.52);transform:scale(1.06)}',
+              1
+          )
+
+          p.write_text(s, encoding='utf-8')
+          print('Yass doorway asset wired into archive teaser')
+          PY
+
+      - name: Verify landing asset
+        run: |
+          test -s assets/yass-doorway-v1.webp
+          file assets/yass-doorway-v1.webp
+          grep -q 'yass-doorway-v1.webp' index.html
+
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
