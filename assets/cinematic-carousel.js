@@ -20,13 +20,15 @@
     .carousel-slide:not(.is-active) img{opacity:.72;transform:scale(.975)}
     .carousel-slide.is-active img{opacity:1;transform:scale(1)}
     .carousel-slide.is-active:before{opacity:.88;filter:blur(36px) saturate(.66) brightness(.31)}
-    .carousel-count{font-size:8px;letter-spacing:.32em;padding:9px 12px;border:1px solid rgba(199,163,106,.2);background:rgba(5,5,5,.5);backdrop-filter:blur(9px);color:#d4b87e}
+    .carousel-count{font-size:8px;letter-spacing:.32em;padding:9px 12px;border:1px solid rgba(199,163,106,.2);background:rgba(5,5,5,.5);backdrop-filter:blur(9px);color:#d4b87e;transition:border-color .45s ease,background .45s ease}
+    .carousel-slide.is-active .carousel-count{border-color:rgba(199,163,106,.36);background:rgba(5,5,5,.62)}
     .carousel-button{border-color:rgba(199,163,106,.36);background:rgba(5,5,5,.48);box-shadow:0 10px 34px rgba(0,0,0,.28)}
     .carousel-button:hover{box-shadow:0 0 30px rgba(179,72,208,.18)}
     .cinematic-progress{position:absolute;z-index:8;left:50%;bottom:0;width:min(420px,42vw);height:1px;transform:translateX(-50%);background:rgba(255,255,255,.09);overflow:hidden;pointer-events:none}
     .cinematic-progress span{display:block;width:100%;height:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,var(--gold),var(--violet));box-shadow:0 0 12px rgba(179,72,208,.4)}
     .cinematic-progress.running span{animation:ynFilmProgress 5.2s linear forwards}
     .archive-carousel.is-paused .cinematic-progress.running span{animation-play-state:paused}
+    .cinematic-announcer{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
     @keyframes ynFilmProgress{to{transform:scaleX(1)}}
     .carousel-dots{margin-top:26px}
     .carousel-dot{height:1px;background:rgba(255,255,255,.16)}
@@ -41,19 +43,50 @@
   const dots = [...carousel.querySelectorAll('.carousel-dot')];
   const prev = carousel.querySelector('.prev');
   const next = carousel.querySelector('.next');
+  const viewport = carousel.querySelector('.carousel-viewport');
+  const prefetched = new Set();
 
   const progress = document.createElement('div');
   progress.className = 'cinematic-progress';
   progress.setAttribute('aria-hidden', 'true');
   progress.innerHTML = '<span></span>';
-  carousel.querySelector('.carousel-viewport')?.appendChild(progress);
+  viewport?.appendChild(progress);
+
+  const announcer = document.createElement('div');
+  announcer.className = 'cinematic-announcer';
+  announcer.setAttribute('aria-live', 'polite');
+  announcer.setAttribute('aria-atomic', 'true');
+  carousel.appendChild(announcer);
 
   const classify = (slide, img) => {
     if (!img.naturalWidth || !img.naturalHeight) return;
-    slide.classList.toggle('is-portrait', img.naturalHeight > img.naturalWidth * 1.08);
-    slide.classList.toggle('is-landscape', img.naturalWidth >= img.naturalHeight * 1.08);
-    slide.classList.toggle('is-square', Math.abs(img.naturalWidth - img.naturalHeight) / Math.max(img.naturalWidth, img.naturalHeight) < .08);
+    const portrait = img.naturalHeight > img.naturalWidth * 1.08;
+    const landscape = img.naturalWidth >= img.naturalHeight * 1.08;
+    slide.classList.toggle('is-portrait', portrait);
+    slide.classList.toggle('is-landscape', landscape);
+    slide.classList.toggle('is-square', !portrait && !landscape);
+    slide.dataset.orientation = portrait ? 'portrait' : landscape ? 'landscape' : 'square';
     slide.style.setProperty('--film-bg', `url("${img.currentSrc || img.src}")`);
+  };
+
+  const prefetchImage = index => {
+    const slide = slides[(index + slides.length) % slides.length];
+    const img = slide?.querySelector('img');
+    const src = img?.currentSrc || img?.src;
+    if (!src || prefetched.has(src)) return;
+    prefetched.add(src);
+    const probe = new Image();
+    probe.decoding = 'async';
+    probe.src = src;
+  };
+
+  const prefetchNeighbors = index => {
+    const task = () => {
+      prefetchImage(index + 1);
+      prefetchImage(index - 1);
+    };
+    if ('requestIdleCallback' in window) requestIdleCallback(task, { timeout: 800 });
+    else setTimeout(task, 80);
   };
 
   slides.forEach((slide, i) => {
@@ -62,6 +95,7 @@
     if (img.complete) classify(slide, img);
     else img.addEventListener('load', () => classify(slide, img), { once:true });
     slide.classList.toggle('is-active', i === 0);
+    slide.setAttribute('aria-hidden', String(i !== 0));
   });
 
   const resetProgress = () => {
@@ -71,41 +105,91 @@
     progress.classList.add('running');
   };
 
+  let hasAnnounced = false;
+  let syncQueued = false;
   const syncActive = () => {
+    syncQueued = false;
     let active = dots.findIndex(d => d.classList.contains('active'));
     if (active < 0) active = 0;
+
     slides.forEach((slide, i) => {
-      slide.classList.toggle('is-active', i === active);
+      const isActive = i === active;
+      slide.classList.toggle('is-active', isActive);
+      slide.setAttribute('aria-hidden', String(!isActive));
+      if (isActive) slide.setAttribute('aria-current', 'true');
+      else slide.removeAttribute('aria-current');
       const img = slide.querySelector('img');
       if (img) img.style.transform = '';
     });
+
+    dots.forEach((dot, i) => {
+      dot.tabIndex = i === active ? 0 : -1;
+      dot.setAttribute('aria-label', `Foto ${i + 1} de ${slides.length}`);
+    });
+
+    if (hasAnnounced) {
+      const activeImg = slides[active]?.querySelector('img');
+      announcer.textContent = `Foto ${active + 1} de ${slides.length}. ${activeImg?.alt || 'Editorial Yass Noir'}`;
+    }
+    hasAnnounced = true;
+
+    prefetchNeighbors(active);
     resetProgress();
   };
 
-  const observer = new MutationObserver(syncActive);
+  const queueSync = () => {
+    if (syncQueued) return;
+    syncQueued = true;
+    requestAnimationFrame(syncActive);
+  };
+
+  const observer = new MutationObserver(queueSync);
   dots.forEach(dot => observer.observe(dot, { attributes:true, attributeFilter:['class','aria-selected'] }));
-  resetProgress();
+  syncActive();
 
   carousel.addEventListener('keydown', e => {
     if (e.key === 'ArrowLeft') { e.preventDefault(); prev?.click(); }
     if (e.key === 'ArrowRight') { e.preventDefault(); next?.click(); }
+    if (e.key === 'Home') { e.preventDefault(); dots[0]?.click(); }
+    if (e.key === 'End') { e.preventDefault(); dots[dots.length - 1]?.click(); }
   });
   carousel.tabIndex = 0;
 
   carousel.addEventListener('mouseenter', () => carousel.classList.add('is-paused'));
   carousel.addEventListener('mouseleave', () => carousel.classList.remove('is-paused'));
+  carousel.addEventListener('focusin', () => {
+    carousel.classList.add('is-paused');
+    carousel.dispatchEvent(new Event('mouseenter'));
+  });
+  carousel.addEventListener('focusout', e => {
+    if (carousel.contains(e.relatedTarget)) return;
+    carousel.classList.remove('is-paused');
+    carousel.dispatchEvent(new Event('mouseleave'));
+  });
   document.addEventListener('visibilitychange', () => carousel.classList.toggle('is-paused', document.hidden));
 
   if (matchMedia('(hover:hover) and (pointer:fine)').matches) {
-    carousel.addEventListener('pointermove', e => {
+    let parallaxFrame = 0;
+    let parallaxX = 0;
+    let parallaxY = 0;
+
+    const paintParallax = () => {
+      parallaxFrame = 0;
       const active = carousel.querySelector('.carousel-slide.is-active img');
       if (!active) return;
+      active.style.transform = `translate3d(${parallaxX}px,${parallaxY}px,0) scale(1.008)`;
+    };
+
+    carousel.addEventListener('pointermove', e => {
       const r = carousel.getBoundingClientRect();
-      const x = ((e.clientX - r.left) / r.width - .5) * 8;
-      const y = ((e.clientY - r.top) / r.height - .5) * 5;
-      active.style.transform = `translate3d(${x}px,${y}px,0) scale(1.008)`;
+      parallaxX = ((e.clientX - r.left) / r.width - .5) * 8;
+      parallaxY = ((e.clientY - r.top) / r.height - .5) * 5;
+      if (!parallaxFrame) parallaxFrame = requestAnimationFrame(paintParallax);
     });
+
     carousel.addEventListener('pointerleave', () => {
+      if (parallaxFrame) cancelAnimationFrame(parallaxFrame);
+      parallaxFrame = 0;
       slides.forEach(slide => {
         const img = slide.querySelector('img');
         if (img) img.style.transform = '';
