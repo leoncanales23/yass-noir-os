@@ -2,6 +2,12 @@
   const carousel = document.querySelector('.archive-carousel');
   if (!carousel) return;
 
+  const breathingStyles = document.createElement('link');
+  breathingStyles.rel = 'stylesheet';
+  breathingStyles.href = '/assets/cinematic-breathing.css?v=1';
+  breathingStyles.dataset.yn = 'cinematic-breathing';
+  document.head.appendChild(breathingStyles);
+
   const style = document.createElement('style');
   style.textContent = `
     .archive{position:relative;background:radial-gradient(circle at 50% 38%,rgba(179,72,208,.07),transparent 34%),linear-gradient(180deg,#0c0a0b,#070607 82%)}
