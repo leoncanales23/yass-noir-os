@@ -1,10 +1,35 @@
 (() => {
+  const mapImage = document.querySelector('.tattoo-stage img[data-b64]');
+  if (mapImage) {
+    const stage = mapImage.closest('.tattoo-stage');
+    const source = mapImage.dataset.b64;
+    if (source) {
+      fetch(`${source}?v=noir-map-2`, { cache: 'force-cache' })
+        .then(response => {
+          if (!response.ok) throw new Error(`Noir Map asset ${response.status}`);
+          return response.text();
+        })
+        .then(raw => {
+          const payload = raw.replace(/\s+/g, '');
+          if (!/^UklGR/i.test(payload)) throw new Error('Noir Map payload is not WebP base64');
+          mapImage.src = `data:image/webp;base64,${payload}`;
+          mapImage.removeAttribute('data-b64');
+          mapImage.dataset.mapReady = 'true';
+          stage?.classList.add('is-map-ready');
+        })
+        .catch(error => {
+          stage?.classList.add('is-map-error');
+          console.warn('[Yass Noir] Noir Map could not hydrate', error);
+        });
+    }
+  }
+
   const carousel = document.querySelector('.archive-carousel');
   if (!carousel) return;
 
   const breathingStyles = document.createElement('link');
   breathingStyles.rel = 'stylesheet';
-  breathingStyles.href = '/assets/cinematic-breathing.css?v=1';
+  breathingStyles.href = '/assets/cinematic-breathing.css?v=2';
   breathingStyles.dataset.yn = 'cinematic-breathing';
   document.head.appendChild(breathingStyles);
 
@@ -103,12 +128,7 @@
     if (!memoryReady || !Number.isInteger(index) || index < 0 || index >= slides.length) return;
     if (!force && index === lastPersistedIndex) return;
     try {
-      localStorage.setItem(memoryKey, JSON.stringify({
-        version: 1,
-        index,
-        slides: slides.length,
-        seenAt: Date.now()
-      }));
+      localStorage.setItem(memoryKey, JSON.stringify({ version:1, index, slides:slides.length, seenAt:Date.now() }));
       lastPersistedIndex = index;
       carousel.dataset.memoryIndex = String(index);
     } catch {
@@ -128,7 +148,7 @@
   };
 
   const prefetchImage = index => {
-    if (!nearViewport || document.hidden) return;
+    if (!nearViewport || document.hidden || !slides.length) return;
     const slide = slides[(index + slides.length) % slides.length];
     const img = slide?.querySelector('img');
     const src = img?.currentSrc || img?.src;
@@ -146,7 +166,7 @@
       prefetchImage(index + 1);
       prefetchImage(index - 1);
     };
-    if ('requestIdleCallback' in window) requestIdleCallback(task, { timeout: 800 });
+    if ('requestIdleCallback' in window) requestIdleCallback(task, { timeout:800 });
     else setTimeout(task, 80);
   };
 
@@ -302,11 +322,7 @@
       if (nextNearViewport === nearViewport) return;
       nearViewport = nextNearViewport;
       syncLifecycle();
-    }, {
-      root:null,
-      rootMargin:'280px 0px 280px 0px',
-      threshold:0
-    });
+    }, { root:null, rootMargin:'280px 0px 280px 0px', threshold:0 });
     visibilityObserver.observe(carousel);
   }
 
