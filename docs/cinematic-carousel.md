@@ -36,6 +36,26 @@ The enhancement layer maintains active-slide `aria-hidden` / `aria-current` stat
 
 Desktop pointer parallax is painted through `requestAnimationFrame` so multiple pointer events collapse into one visual update per frame. Touch/coarse-pointer devices do not receive the effect.
 
+### Visibility-aware lifecycle
+
+The carousel now has an explicit runtime lifecycle driven by `IntersectionObserver`.
+
+When the carousel moves more than 280 px beyond the viewport buffer, it enters `sleeping` state. In that state the enhancement layer:
+
+- pauses the base autoplay through the existing carousel event contract;
+- stops the cinematic progress animation;
+- cancels pending parallax frames and clears transforms;
+- stops predictive neighbor prefetch work;
+- removes `will-change` hints;
+- disables the blurred ambient background layer;
+- removes the large cinematic viewport shadow.
+
+The carousel wakes before it becomes visible again because the observer uses a 280 px root margin. This gives the browser a short warm-up zone so the user sees the full cinematic treatment instead of a cold restart.
+
+The state is also exposed as `data-lifecycle="awake|sleeping"`, which makes the behavior inspectable without adding visible UI.
+
+Document visibility, pointer hover and keyboard focus share the same pause-state coordinator. This avoids competing pause/resume paths and keeps the visual timer aligned with the underlying autoplay.
+
 ### Reduced-motion path
 
 `prefers-reduced-motion` disables progress animation and image motion while preserving navigation and content.
@@ -44,5 +64,6 @@ Desktop pointer parallax is painted through `requestAnimationFrame` so multiple 
 
 - **v1.0**: adaptive cinematic presentation, ambient backgrounds, progress line, keyboard arrows and desktop parallax.
 - **v1.1**: predictive neighbor prefetch, assistive announcements, roving focus, Home/End navigation, focus-aware autoplay pause and rAF parallax scheduling.
+- **v1.2**: IntersectionObserver lifecycle, offscreen sleep mode, shared pause coordinator, render-cost reduction and warm-up-before-visible behavior.
 
 The implementation intentionally remains framework-free and additive to the static VibraAlto/Firebase landing architecture.
