@@ -5,7 +5,8 @@
   const style = document.createElement('style');
   style.textContent = `
     .archive{position:relative;background:radial-gradient(circle at 50% 38%,rgba(179,72,208,.07),transparent 34%),linear-gradient(180deg,#0c0a0b,#070607 82%)}
-    .archive-carousel{--film-progress:0;max-width:min(1240px,94vw)}
+    .archive-carousel{--film-progress:0;max-width:min(1240px,94vw);outline:none}
+    .archive-carousel:focus-visible{outline:1px solid rgba(199,163,106,.42);outline-offset:8px}
     .carousel-viewport{position:relative;isolation:isolate;border-color:rgba(199,163,106,.24);background:#030303;box-shadow:0 38px 130px rgba(0,0,0,.62),0 0 55px rgba(179,72,208,.08)}
     .carousel-viewport:before,.carousel-viewport:after{content:'';position:absolute;z-index:6;left:0;right:0;height:8%;pointer-events:none}
     .carousel-viewport:before{top:0;background:linear-gradient(180deg,rgba(0,0,0,.48),transparent)}
@@ -25,6 +26,7 @@
     .cinematic-progress{position:absolute;z-index:8;left:50%;bottom:0;width:min(420px,42vw);height:1px;transform:translateX(-50%);background:rgba(255,255,255,.09);overflow:hidden;pointer-events:none}
     .cinematic-progress span{display:block;width:100%;height:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,var(--gold),var(--violet));box-shadow:0 0 12px rgba(179,72,208,.4)}
     .cinematic-progress.running span{animation:ynFilmProgress 5.2s linear forwards}
+    .archive-carousel.is-paused .cinematic-progress.running span{animation-play-state:paused}
     @keyframes ynFilmProgress{to{transform:scaleX(1)}}
     .carousel-dots{margin-top:26px}
     .carousel-dot{height:1px;background:rgba(255,255,255,.16)}
@@ -72,7 +74,11 @@
   const syncActive = () => {
     let active = dots.findIndex(d => d.classList.contains('active'));
     if (active < 0) active = 0;
-    slides.forEach((s, i) => s.classList.toggle('is-active', i === active));
+    slides.forEach((slide, i) => {
+      slide.classList.toggle('is-active', i === active);
+      const img = slide.querySelector('img');
+      if (img) img.style.transform = '';
+    });
     resetProgress();
   };
 
@@ -86,6 +92,10 @@
   });
   carousel.tabIndex = 0;
 
+  carousel.addEventListener('mouseenter', () => carousel.classList.add('is-paused'));
+  carousel.addEventListener('mouseleave', () => carousel.classList.remove('is-paused'));
+  document.addEventListener('visibilitychange', () => carousel.classList.toggle('is-paused', document.hidden));
+
   if (matchMedia('(hover:hover) and (pointer:fine)').matches) {
     carousel.addEventListener('pointermove', e => {
       const active = carousel.querySelector('.carousel-slide.is-active img');
@@ -96,8 +106,10 @@
       active.style.transform = `translate3d(${x}px,${y}px,0) scale(1.008)`;
     });
     carousel.addEventListener('pointerleave', () => {
-      const active = carousel.querySelector('.carousel-slide.is-active img');
-      if (active) active.style.transform = '';
+      slides.forEach(slide => {
+        const img = slide.querySelector('img');
+        if (img) img.style.transform = '';
+      });
     });
   }
 })();
