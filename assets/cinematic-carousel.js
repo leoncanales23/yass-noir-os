@@ -51,6 +51,7 @@
   const viewport = carousel.querySelector('.carousel-viewport');
   const prefetched = new Set();
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const memoryKey = 'yn.carousel.memory.v1';
 
   let nearViewport = true;
   let pointerPaused = false;
@@ -59,6 +60,8 @@
   let parallaxFrame = 0;
   let parallaxX = 0;
   let parallaxY = 0;
+  let lastPersistedIndex = -1;
+  let memoryReady = false;
 
   const progress = document.createElement('div');
   progress.className = 'cinematic-progress';
@@ -75,6 +78,36 @@
   const activeIndex = () => {
     const index = dots.findIndex(dot => dot.classList.contains('active'));
     return index < 0 ? 0 : index;
+  };
+
+  const readMemory = () => {
+    try {
+      const raw = localStorage.getItem(memoryKey);
+      if (!raw) return null;
+      const memory = JSON.parse(raw);
+      const index = Number(memory?.index);
+      if (!Number.isInteger(index) || index < 0 || !slides.length) return null;
+      return Math.min(index, slides.length - 1);
+    } catch {
+      return null;
+    }
+  };
+
+  const persistMemory = (index, force = false) => {
+    if (!memoryReady || !Number.isInteger(index) || index < 0 || index >= slides.length) return;
+    if (!force && index === lastPersistedIndex) return;
+    try {
+      localStorage.setItem(memoryKey, JSON.stringify({
+        version: 1,
+        index,
+        slides: slides.length,
+        seenAt: Date.now()
+      }));
+      lastPersistedIndex = index;
+      carousel.dataset.memoryIndex = String(index);
+    } catch {
+      carousel.dataset.memory = 'unavailable';
+    }
   };
 
   const classify = (slide, img) => {
@@ -119,6 +152,17 @@
     slide.classList.toggle('is-active', i === 0);
     slide.setAttribute('aria-hidden', String(i !== 0));
   });
+
+  const rememberedIndex = readMemory();
+  if (rememberedIndex !== null) {
+    carousel.dataset.memory = 'restored';
+    carousel.dataset.memoryIndex = String(rememberedIndex);
+    lastPersistedIndex = rememberedIndex;
+    if (rememberedIndex !== activeIndex()) dots[rememberedIndex]?.click();
+  } else {
+    carousel.dataset.memory = 'new';
+  }
+  memoryReady = true;
 
   const resetProgress = () => {
     if (reducedMotion.matches || !nearViewport || document.hidden) return;
@@ -189,6 +233,7 @@
       announcer.textContent = `Foto ${active + 1} de ${slides.length}. ${activeImg?.alt || 'Editorial Yass Noir'}`;
     }
     hasAnnounced = true;
+    persistMemory(active);
 
     if (nearViewport) {
       prefetchNeighbors(active);
@@ -237,7 +282,11 @@
     syncLifecycle();
   });
 
-  document.addEventListener('visibilitychange', () => syncLifecycle());
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) persistMemory(activeIndex(), true);
+    syncLifecycle();
+  });
+  addEventListener('pagehide', () => persistMemory(activeIndex(), true));
 
   if ('IntersectionObserver' in window) {
     const visibilityObserver = new IntersectionObserver(entries => {

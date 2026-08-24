@@ -38,7 +38,7 @@ Desktop pointer parallax is painted through `requestAnimationFrame` so multiple 
 
 ### Visibility-aware lifecycle
 
-The carousel now has an explicit runtime lifecycle driven by `IntersectionObserver`.
+The carousel has an explicit runtime lifecycle driven by `IntersectionObserver`.
 
 When the carousel moves more than 280 px beyond the viewport buffer, it enters `sleeping` state. In that state the enhancement layer:
 
@@ -56,6 +56,25 @@ The state is also exposed as `data-lifecycle="awake|sleeping"`, which makes the 
 
 Document visibility, pointer hover and keyboard focus share the same pause-state coordinator. This avoids competing pause/resume paths and keeps the visual timer aligned with the underlying autoplay.
 
+### Local visual memory
+
+The carousel now remembers the last active photograph in browser-local storage under the versioned key `yn.carousel.memory.v1`.
+
+The stored payload contains only:
+
+- the last active slide index;
+- the number of slides that existed at the time of the write;
+- a local timestamp;
+- the memory schema version.
+
+On a later visit, the saved index is validated and clamped against the current archive length before restoration. This means adding or removing photographs does not leave the visitor pointing to an invalid frame.
+
+Memory restoration reuses the carousel's existing dot navigation instead of mutating the track directly. That keeps autoplay, accessibility state, progress timing and the visibility lifecycle synchronized with the restored frame.
+
+Writes are deduplicated when the active index has not changed, and the current frame is flushed again on `visibilitychange` and `pagehide` so a quick exit still preserves the last view.
+
+The memory is local to the browser/device. No backend, account identity or remote tracking is required. Runtime inspection is exposed through `data-memory="new|restored|unavailable"` and `data-memory-index`.
+
 ### Reduced-motion path
 
 `prefers-reduced-motion` disables progress animation and image motion while preserving navigation and content.
@@ -65,5 +84,6 @@ Document visibility, pointer hover and keyboard focus share the same pause-state
 - **v1.0**: adaptive cinematic presentation, ambient backgrounds, progress line, keyboard arrows and desktop parallax.
 - **v1.1**: predictive neighbor prefetch, assistive announcements, roving focus, Home/End navigation, focus-aware autoplay pause and rAF parallax scheduling.
 - **v1.2**: IntersectionObserver lifecycle, offscreen sleep mode, shared pause coordinator, render-cost reduction and warm-up-before-visible behavior.
+- **v1.3**: versioned local visual memory, defensive restore, archive-length clamping, deduplicated persistence and page-exit flush.
 
 The implementation intentionally remains framework-free and additive to the static VibraAlto/Firebase landing architecture.
