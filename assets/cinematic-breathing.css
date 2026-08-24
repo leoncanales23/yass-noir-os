@@ -87,15 +87,13 @@
   opacity:.62;
 }
 
-/* Noir Map v1.0: the original markup points a binary WebP through the old
-   data-b64 hydrator. Present the real asset directly as the stage canvas so
-   the interaction remains useful even if that legacy hydrator fails. */
+/* Noir Map runtime canvas. The actual image is hydrated by JS from its
+   Base64 text payload, so CSS no longer wastes a failed image decode request. */
 .tattoos .tattoo-stage{
   isolation:isolate;
   background:
     radial-gradient(circle at 64% 42%,rgba(179,72,208,.10),transparent 28%),
     linear-gradient(90deg,rgba(7,7,7,.10),rgba(7,7,7,.34)),
-    url('/assets/hero-editorial-hq.webp?v=noir-map-1') 58% 18% / cover no-repeat,
     #100c0e;
   border-color:rgba(199,163,106,.16);
   box-shadow:
@@ -107,6 +105,11 @@
   opacity:0 !important;
   visibility:hidden;
   pointer-events:none;
+}
+
+.tattoos .tattoo-stage > img[data-map-ready="true"]{
+  opacity:1;
+  visibility:visible;
 }
 
 .tattoos .tattoo-stage:before{
@@ -172,6 +175,73 @@
   box-shadow:0 22px 60px rgba(0,0,0,.32);
 }
 
+/* Landing Rendering Pipeline v2.0 */
+:where(#historia,#tatuajes,#archivo,#experiencia,.motion,.threshold,.cta){
+  scroll-margin-top:88px;
+}
+
+:where(.hero-lead,.manifesto h2,.tattoo-copy h2,.archive-head h2,.private-side h2,.threshold h2,.cta h3){
+  text-wrap:balance;
+}
+
+:where(.tattoo-stage,.archive-carousel,.frame){
+  contain:layout paint style;
+}
+
+@supports(content-visibility:auto){
+  :where(.manifesto,.tattoos,.motion,.archive,.private-side,.threshold,.cta){
+    content-visibility:auto;
+    contain-intrinsic-size:auto 780px;
+  }
+  .archive{contain-intrinsic-size:auto 980px}
+  .motion{contain-intrinsic-size:auto 100svh}
+}
+
+@supports(animation-timeline:view()){
+  @keyframes ynViewLift{
+    from{opacity:.72;transform:translateY(18px);filter:blur(2px)}
+    to{opacity:1;transform:translateY(0);filter:blur(0)}
+  }
+  :where(.manifesto h2,.tattoo-copy h2,.archive-head h2,.private-side h2,.threshold h2,.cta h3){
+    animation-name:ynViewLift;
+    animation-duration:1ms;
+    animation-fill-mode:both;
+    animation-timing-function:linear;
+    animation-timeline:view();
+    animation-range:entry 8% cover 34%;
+  }
+}
+
+@supports(selector(body:has(*))){
+  body:has(#historia:target) .nav a[href="#historia"],
+  body:has(#tatuajes:target) .nav a[href="#tatuajes"],
+  body:has(#archivo:target) .nav a[href="#archivo"],
+  body:has(#experiencia:target) .nav a[href="#experiencia"]{
+    opacity:1;
+    color:var(--paper);
+    text-shadow:0 0 18px rgba(199,163,106,.28);
+  }
+}
+
+@media(update:slow){
+  .noise{opacity:.025}
+  .archive-carousel .carousel-slide:before{filter:blur(28px) saturate(.48) brightness(.25)}
+  .tattoos .tattoo-stage{box-shadow:0 18px 54px rgba(0,0,0,.34)}
+  .tattoos .hotspot{box-shadow:0 0 0 7px rgba(179,72,208,.06),0 0 18px rgba(216,79,202,.42)}
+}
+
+@media(pointer:coarse){
+  .tattoos .hotspot{width:18px;height:18px}
+  .tattoos .hotspot:before{inset:-12px}
+  .carousel-button{min-width:48px;min-height:48px}
+}
+
+@media(prefers-contrast:more){
+  .button,.menu-btn,.tattoos .tattoo-note,.carousel-button{border-color:rgba(241,236,230,.58)}
+  .nav a{opacity:.92}
+  .tattoos .hotspot{border-color:#fff}
+}
+
 @media(min-width:901px){
   .archive-carousel .carousel-slide{height:min(88svh,940px)}
   .tattoos .tattoo-stage{min-height:min(76svh,760px)}
@@ -190,10 +260,7 @@
   .archive-carousel .carousel-slide.is-square img{max-width:86%;max-height:82%}
   .archive-carousel .carousel-slide:before{inset:-22%;filter:blur(42px) saturate(.5) brightness(.23)}
   .archive-carousel .cinematic-progress{width:36vw;bottom:8px}
-  .tattoos .tattoo-stage{
-    min-height:620px;
-    background-position:61% 18%;
-  }
+  .tattoos .tattoo-stage{min-height:620px}
   .tattoos .tattoo-note{
     width:calc(100% - 32px);
     right:16px;
@@ -202,5 +269,11 @@
 }
 
 @media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    scroll-behavior:auto !important;
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+  }
   .tattoos .hotspot:before{transition:none}
+  .hero-image img,.carousel-slide img{transform:none !important}
 }
