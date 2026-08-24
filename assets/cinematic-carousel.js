@@ -29,6 +29,11 @@
     .cinematic-progress.running span{animation:ynFilmProgress 5.2s linear forwards}
     .archive-carousel.is-paused .cinematic-progress.running span{animation-play-state:paused}
     .cinematic-announcer{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+    .archive-carousel.is-sleeping .carousel-track{will-change:auto}
+    .archive-carousel.is-sleeping .carousel-slide img{will-change:auto}
+    .archive-carousel.is-sleeping .carousel-slide:before{opacity:0;filter:none}
+    .archive-carousel.is-sleeping .carousel-viewport{box-shadow:none}
+    .archive-carousel.is-sleeping .cinematic-progress{opacity:0}
     @keyframes ynFilmProgress{to{transform:scaleX(1)}}
     .carousel-dots{margin-top:26px}
     .carousel-dot{height:1px;background:rgba(255,255,255,.16)}
@@ -45,6 +50,15 @@
   const next = carousel.querySelector('.next');
   const viewport = carousel.querySelector('.carousel-viewport');
   const prefetched = new Set();
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+  let nearViewport = true;
+  let pointerPaused = false;
+  let focusPaused = false;
+  let basePaused = false;
+  let parallaxFrame = 0;
+  let parallaxX = 0;
+  let parallaxY = 0;
 
   const progress = document.createElement('div');
   progress.className = 'cinematic-progress';
@@ -58,6 +72,11 @@
   announcer.setAttribute('aria-atomic', 'true');
   carousel.appendChild(announcer);
 
+  const activeIndex = () => {
+    const index = dots.findIndex(dot => dot.classList.contains('active'));
+    return index < 0 ? 0 : index;
+  };
+
   const classify = (slide, img) => {
     if (!img.naturalWidth || !img.naturalHeight) return;
     const portrait = img.naturalHeight > img.naturalWidth * 1.08;
@@ -70,6 +89,7 @@
   };
 
   const prefetchImage = index => {
+    if (!nearViewport || document.hidden) return;
     const slide = slides[(index + slides.length) % slides.length];
     const img = slide?.querySelector('img');
     const src = img?.currentSrc || img?.src;
@@ -81,7 +101,9 @@
   };
 
   const prefetchNeighbors = index => {
+    if (!nearViewport || document.hidden) return;
     const task = () => {
+      if (!nearViewport || document.hidden) return;
       prefetchImage(index + 1);
       prefetchImage(index - 1);
     };
@@ -99,18 +121,52 @@
   });
 
   const resetProgress = () => {
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (reducedMotion.matches || !nearViewport || document.hidden) return;
     progress.classList.remove('running');
     void progress.offsetWidth;
     progress.classList.add('running');
+  };
+
+  const clearParallax = () => {
+    if (parallaxFrame) cancelAnimationFrame(parallaxFrame);
+    parallaxFrame = 0;
+    parallaxX = 0;
+    parallaxY = 0;
+    slides.forEach(slide => {
+      const img = slide.querySelector('img');
+      if (img) img.style.transform = '';
+    });
+  };
+
+  const shouldPause = () => !nearViewport || pointerPaused || focusPaused || document.hidden;
+
+  const syncLifecycle = ({ restartProgress = true } = {}) => {
+    const paused = shouldPause();
+    carousel.classList.toggle('is-paused', paused);
+    carousel.classList.toggle('is-sleeping', !nearViewport);
+    carousel.dataset.lifecycle = nearViewport ? 'awake' : 'sleeping';
+
+    if (!nearViewport) {
+      progress.classList.remove('running');
+      clearParallax();
+    }
+
+    if (paused !== basePaused) {
+      basePaused = paused;
+      carousel.dispatchEvent(new Event(paused ? 'mouseenter' : 'mouseleave'));
+    }
+
+    if (!paused && restartProgress) {
+      resetProgress();
+      prefetchNeighbors(activeIndex());
+    }
   };
 
   let hasAnnounced = false;
   let syncQueued = false;
   const syncActive = () => {
     syncQueued = false;
-    let active = dots.findIndex(d => d.classList.contains('active'));
-    if (active < 0) active = 0;
+    const active = activeIndex();
 
     slides.forEach((slide, i) => {
       const isActive = i === active;
@@ -127,14 +183,16 @@
       dot.setAttribute('aria-label', `Foto ${i + 1} de ${slides.length}`);
     });
 
-    if (hasAnnounced) {
+    if (hasAnnounced && nearViewport) {
       const activeImg = slides[active]?.querySelector('img');
       announcer.textContent = `Foto ${active + 1} de ${slides.length}. ${activeImg?.alt || 'Editorial Yass Noir'}`;
     }
     hasAnnounced = true;
 
-    prefetchNeighbors(active);
-    resetProgress();
+    if (nearViewport) {
+      prefetchNeighbors(active);
+      resetProgress();
+    }
   };
 
   const queueSync = () => {
@@ -155,45 +213,66 @@
   });
   carousel.tabIndex = 0;
 
-  carousel.addEventListener('mouseenter', () => carousel.classList.add('is-paused'));
-  carousel.addEventListener('mouseleave', () => carousel.classList.remove('is-paused'));
-  carousel.addEventListener('focusin', () => {
-    carousel.classList.add('is-paused');
-    carousel.dispatchEvent(new Event('mouseenter'));
+  carousel.addEventListener('mouseenter', e => {
+    if (!e.isTrusted) return;
+    pointerPaused = true;
+    syncLifecycle({ restartProgress:false });
   });
+
+  carousel.addEventListener('mouseleave', e => {
+    if (!e.isTrusted) return;
+    pointerPaused = false;
+    syncLifecycle();
+  });
+
+  carousel.addEventListener('focusin', () => {
+    focusPaused = true;
+    syncLifecycle({ restartProgress:false });
+  });
+
   carousel.addEventListener('focusout', e => {
     if (carousel.contains(e.relatedTarget)) return;
-    carousel.classList.remove('is-paused');
-    carousel.dispatchEvent(new Event('mouseleave'));
+    focusPaused = false;
+    syncLifecycle();
   });
-  document.addEventListener('visibilitychange', () => carousel.classList.toggle('is-paused', document.hidden));
+
+  document.addEventListener('visibilitychange', () => syncLifecycle());
+
+  if ('IntersectionObserver' in window) {
+    const visibilityObserver = new IntersectionObserver(entries => {
+      const entry = entries[0];
+      if (!entry) return;
+      const nextNearViewport = entry.isIntersecting;
+      if (nextNearViewport === nearViewport) return;
+      nearViewport = nextNearViewport;
+      syncLifecycle();
+    }, {
+      root:null,
+      rootMargin:'280px 0px 280px 0px',
+      threshold:0
+    });
+    visibilityObserver.observe(carousel);
+  }
 
   if (matchMedia('(hover:hover) and (pointer:fine)').matches) {
-    let parallaxFrame = 0;
-    let parallaxX = 0;
-    let parallaxY = 0;
-
     const paintParallax = () => {
       parallaxFrame = 0;
+      if (!nearViewport || shouldPause()) return;
       const active = carousel.querySelector('.carousel-slide.is-active img');
       if (!active) return;
       active.style.transform = `translate3d(${parallaxX}px,${parallaxY}px,0) scale(1.008)`;
     };
 
     carousel.addEventListener('pointermove', e => {
+      if (!nearViewport || shouldPause()) return;
       const r = carousel.getBoundingClientRect();
       parallaxX = ((e.clientX - r.left) / r.width - .5) * 8;
       parallaxY = ((e.clientY - r.top) / r.height - .5) * 5;
       if (!parallaxFrame) parallaxFrame = requestAnimationFrame(paintParallax);
     });
 
-    carousel.addEventListener('pointerleave', () => {
-      if (parallaxFrame) cancelAnimationFrame(parallaxFrame);
-      parallaxFrame = 0;
-      slides.forEach(slide => {
-        const img = slide.querySelector('img');
-        if (img) img.style.transform = '';
-      });
-    });
+    carousel.addEventListener('pointerleave', () => clearParallax());
   }
+
+  syncLifecycle();
 })();
