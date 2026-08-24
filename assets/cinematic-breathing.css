@@ -87,8 +87,94 @@
   opacity:.62;
 }
 
+/* Noir Map v1.0: the original markup points a binary WebP through the old
+   data-b64 hydrator. Present the real asset directly as the stage canvas so
+   the interaction remains useful even if that legacy hydrator fails. */
+.tattoos .tattoo-stage{
+  isolation:isolate;
+  background:
+    radial-gradient(circle at 64% 42%,rgba(179,72,208,.10),transparent 28%),
+    linear-gradient(90deg,rgba(7,7,7,.10),rgba(7,7,7,.34)),
+    url('/assets/hero-editorial-hq.webp?v=noir-map-1') 58% 18% / cover no-repeat,
+    #100c0e;
+  border-color:rgba(199,163,106,.16);
+  box-shadow:
+    0 34px 100px rgba(0,0,0,.42),
+    0 0 88px rgba(179,72,208,var(--glow));
+}
+
+.tattoos .tattoo-stage > img[data-b64]{
+  opacity:0 !important;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.tattoos .tattoo-stage:before{
+  content:'';
+  position:absolute;
+  z-index:1;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(4,4,4,.14),transparent 24%,transparent 72%,rgba(4,4,4,.42)),
+    radial-gradient(circle at 60% 44%,transparent 0 28%,rgba(5,4,6,.14) 62%,rgba(5,4,6,.42) 100%);
+}
+
+.tattoos .tattoo-stage:after{
+  z-index:2;
+  background:
+    linear-gradient(90deg,rgba(7,7,7,.08),rgba(7,7,7,.12) 52%,rgba(7,7,7,.34)),
+    linear-gradient(180deg,transparent 56%,rgba(7,7,7,.28));
+}
+
+.tattoos .hotspot{
+  z-index:4;
+  width:14px;
+  height:14px;
+  border-color:rgba(234,201,244,.9);
+  background:rgba(179,72,208,.82);
+  box-shadow:
+    0 0 0 9px rgba(179,72,208,.075),
+    0 0 30px rgba(216,79,202,.58);
+}
+
+.tattoos .hotspot:before{
+  content:'';
+  position:absolute;
+  inset:-9px;
+  border:1px solid rgba(199,163,106,.18);
+  border-radius:50%;
+  opacity:.55;
+  transform:scale(.86);
+  transition:transform .45s ease,opacity .45s ease,border-color .45s ease;
+}
+
+.tattoos .hotspot:hover:before,
+.tattoos .hotspot:focus-visible:before,
+.tattoos .hotspot.active:before{
+  transform:scale(1.12);
+  opacity:1;
+  border-color:rgba(199,163,106,.48);
+}
+
+.tattoos .hotspot:focus-visible{
+  outline:1px solid rgba(241,236,230,.72);
+  outline-offset:7px;
+}
+
+.tattoos .tattoo-note{
+  z-index:5;
+  right:clamp(18px,2.3vw,32px);
+  bottom:clamp(18px,2.3vw,32px);
+  width:min(350px,72%);
+  background:linear-gradient(145deg,rgba(8,7,7,.82),rgba(18,12,18,.66));
+  border-color:rgba(199,163,106,.22);
+  box-shadow:0 22px 60px rgba(0,0,0,.32);
+}
+
 @media(min-width:901px){
   .archive-carousel .carousel-slide{height:min(88svh,940px)}
+  .tattoos .tattoo-stage{min-height:min(76svh,760px)}
 }
 
 @media(max-width:900px){
@@ -104,4 +190,17 @@
   .archive-carousel .carousel-slide.is-square img{max-width:86%;max-height:82%}
   .archive-carousel .carousel-slide:before{inset:-22%;filter:blur(42px) saturate(.5) brightness(.23)}
   .archive-carousel .cinematic-progress{width:36vw;bottom:8px}
+  .tattoos .tattoo-stage{
+    min-height:620px;
+    background-position:61% 18%;
+  }
+  .tattoos .tattoo-note{
+    width:calc(100% - 32px);
+    right:16px;
+    bottom:16px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .tattoos .hotspot:before{transition:none}
 }
