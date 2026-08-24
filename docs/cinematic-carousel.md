@@ -58,7 +58,7 @@ Document visibility, pointer hover and keyboard focus share the same pause-state
 
 ### Local visual memory
 
-The carousel now remembers the last active photograph in browser-local storage under the versioned key `yn.carousel.memory.v1`.
+The carousel remembers the last active photograph in browser-local storage under the versioned key `yn.carousel.memory.v1`.
 
 The stored payload contains only:
 
@@ -75,6 +75,24 @@ Writes are deduplicated when the active index has not changed, and the current f
 
 The memory is local to the browser/device. No backend, account identity or remote tracking is required. Runtime inspection is exposed through `data-memory="new|restored|unavailable"` and `data-memory-index`.
 
+### Breathing composition layer
+
+`assets/cinematic-breathing.css` is loaded as a final visual layer after the cinematic runtime. It intentionally dissolves the impression of a hard image frame without touching carousel behavior.
+
+The breathing layer:
+
+- expands the usable stage from 1240 px toward a 1460 px editorial canvas;
+- removes the hard gold border and heavy viewport shadow;
+- increases negative space around every photograph;
+- reduces the perceived weight of the blurred ambient background;
+- softens side and top/bottom masks so the image sits in atmosphere instead of a box;
+- gives portrait, landscape and square images different maximum envelopes;
+- moves navigation controls farther toward the outer stage;
+- uses a taller desktop stage so vertical photographs have room above and below;
+- keeps a separate mobile envelope so the subject still breathes on narrow screens.
+
+The layer is deliberately CSS-only. The no-crop contract, visual memory, lifecycle, autoplay and accessibility state are untouched.
+
 ### Reduced-motion path
 
 `prefers-reduced-motion` disables progress animation and image motion while preserving navigation and content.
@@ -85,5 +103,6 @@ The memory is local to the browser/device. No backend, account identity or remot
 - **v1.1**: predictive neighbor prefetch, assistive announcements, roving focus, Home/End navigation, focus-aware autoplay pause and rAF parallax scheduling.
 - **v1.2**: IntersectionObserver lifecycle, offscreen sleep mode, shared pause coordinator, render-cost reduction and warm-up-before-visible behavior.
 - **v1.3**: versioned local visual memory, defensive restore, archive-length clamping, deduplicated persistence and page-exit flush.
+- **v1.4**: breathing composition layer, larger editorial stage, dissolved hard frame, orientation-specific image envelopes and lighter visual chrome.
 
 The implementation intentionally remains framework-free and additive to the static VibraAlto/Firebase landing architecture.
