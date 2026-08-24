@@ -139,6 +139,7 @@
   };
 
   const shouldPause = () => !nearViewport || pointerPaused || focusPaused || document.hidden;
+  const canParallax = () => nearViewport && !document.hidden && !focusPaused;
 
   const syncLifecycle = ({ restartProgress = true } = {}) => {
     const paused = shouldPause();
@@ -257,14 +258,14 @@
   if (matchMedia('(hover:hover) and (pointer:fine)').matches) {
     const paintParallax = () => {
       parallaxFrame = 0;
-      if (!nearViewport || shouldPause()) return;
+      if (!canParallax()) return;
       const active = carousel.querySelector('.carousel-slide.is-active img');
       if (!active) return;
       active.style.transform = `translate3d(${parallaxX}px,${parallaxY}px,0) scale(1.008)`;
     };
 
     carousel.addEventListener('pointermove', e => {
-      if (!nearViewport || shouldPause()) return;
+      if (!canParallax()) return;
       const r = carousel.getBoundingClientRect();
       parallaxX = ((e.clientX - r.left) / r.width - .5) * 8;
       parallaxY = ((e.clientY - r.top) / r.height - .5) * 5;
