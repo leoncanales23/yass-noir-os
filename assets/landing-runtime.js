@@ -6,39 +6,6 @@
   const hotspots = [...document.querySelectorAll('.hotspot')];
   const film = document.querySelector('#noir-film');
 
-  const fallbackPremiere = () => {
-    const loader = document.querySelector('.loader');
-    loader?.classList.add('hide');
-    document.body.classList.remove('premiere-lock', 'premiere-running');
-    document.body.classList.add('premiere-done');
-  };
-
-  const launchPremiere = () => {
-    if (document.querySelector('script[data-yn="diva-premiere"]')) return;
-    const script = document.createElement('script');
-    script.src = '/assets/diva-premiere.js?v=1';
-    script.dataset.yn = 'diva-premiere';
-    script.onerror = fallbackPremiere;
-    document.head.appendChild(script);
-  };
-
-  const existingPremiereStyle = document.querySelector('link[data-yn="diva-premiere"]');
-  if (existingPremiereStyle) {
-    launchPremiere();
-  } else {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = '/assets/diva-premiere.css?v=1';
-    link.dataset.yn = 'diva-premiere';
-    link.onload = launchPremiere;
-    link.onerror = fallbackPremiere;
-    document.head.appendChild(link);
-  }
-
-  window.setTimeout(() => {
-    if (document.documentElement.dataset.divaPremiere !== 'v1') fallbackPremiere();
-  }, 2600);
-
   if (memoryLine) {
     const messages = [
       'Primer contacto. Nada aquí está puesto por accidente.',
