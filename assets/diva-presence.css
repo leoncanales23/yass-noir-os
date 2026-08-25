@@ -73,7 +73,7 @@ body[data-diva-scene="hero"] .hero-accent-line{
   --diva-local-energy:1;
 }
 .manifesto[data-diva-active="true"] h2,
-.tattoo-copy[data-diva-active="true"] h2,
+.tattoos[data-diva-active="true"] .tattoo-copy h2,
 .archive[data-diva-active="true"] .archive-head h2,
 .private-side[data-diva-active="true"] h2,
 .threshold[data-diva-active="true"] h2,
@@ -81,7 +81,7 @@ body[data-diva-scene="hero"] .hero-accent-line{
   text-shadow:0 0 42px rgba(var(--diva-gold)/.055);
 }
 
-/* Luxury micro-reflection on primary actions. */
+/* Luxury micro-reflection on actions. */
 .button{
   --mag-x:0px;
   --mag-y:0px;
@@ -93,13 +93,13 @@ body[data-diva-scene="hero"] .hero-accent-line{
 .button:after{
   content:'';
   position:absolute;
-  z-index:-1;
+  z-index:2;
   top:-120%;
   bottom:-120%;
   width:38%;
   left:-52%;
   transform:rotate(17deg);
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);
   opacity:0;
   pointer-events:none;
 }
@@ -107,7 +107,7 @@ body[data-diva-scene="hero"] .hero-accent-line{
   transform:translate3d(var(--mag-x),calc(var(--mag-y) - 2px),0);
 }
 .button:hover:after{
-  opacity:.78;
+  opacity:.72;
   animation:divaGlint .85s cubic-bezier(.2,.7,.2,1) forwards;
 }
 @keyframes divaGlint{to{left:118%}}
