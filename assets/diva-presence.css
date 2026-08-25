@@ -1,0 +1,167 @@
+:root{
+  --diva-x:72%;
+  --diva-y:34%;
+  --diva-energy:.42;
+  --diva-velocity:0;
+  --diva-gold:199 163 106;
+  --diva-violet:179 72 208;
+}
+
+/* Diva Presence Engine v1
+   A reactive stage-light layer. Decorative only, pointer-safe and motion-aware. */
+.diva-aura{
+  position:fixed;
+  inset:0;
+  z-index:88;
+  pointer-events:none;
+  opacity:calc(.08 + var(--diva-energy) * .10);
+  background:
+    radial-gradient(circle 320px at var(--diva-x) var(--diva-y),rgba(var(--diva-gold)/.38),rgba(var(--diva-violet)/.11) 38%,transparent 72%),
+    radial-gradient(ellipse 38vw 26vh at 84% 18%,rgba(var(--diva-violet)/.08),transparent 72%);
+  mix-blend-mode:screen;
+  transition:opacity .7s ease;
+}
+
+.diva-stage-label{
+  position:fixed;
+  z-index:96;
+  left:clamp(16px,2.4vw,36px);
+  bottom:clamp(16px,2.4vw,30px);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  pointer-events:none;
+  color:rgba(241,236,230,.58);
+  font:500 8px/1 Inter,sans-serif;
+  letter-spacing:.24em;
+  text-transform:uppercase;
+  transition:opacity .45s ease,transform .55s cubic-bezier(.2,.7,.2,1),color .45s ease;
+}
+.diva-stage-label:before{
+  content:'';
+  width:28px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(var(--diva-gold)/.72));
+  box-shadow:0 0 14px rgba(var(--diva-gold)/.25);
+}
+.diva-stage-label strong{font-weight:500;color:rgba(199,163,106,.92)}
+.diva-stage-label.is-changing{opacity:.18;transform:translateY(6px)}
+
+/* The hero behaves like a lit stage, not a flat banner. */
+.hero-image:before{
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse 24vw 34vh at var(--diva-x) var(--diva-y),rgba(255,232,190,.12),rgba(199,163,106,.035) 48%,transparent 76%),
+    radial-gradient(circle at 75% 54%,rgba(179,72,208,.055),transparent 34%);
+  opacity:calc(.48 + var(--diva-energy) * .45);
+  transition:opacity .6s ease;
+}
+.hero-copy,.hero-accent{will-change:transform}
+body[data-diva-scene="hero"] .hero-watermark{
+  text-shadow:0 0 48px rgba(var(--diva-gold)/.07);
+}
+body[data-diva-scene="hero"] .hero-accent-line{
+  box-shadow:0 0 18px rgba(var(--diva-gold)/.2),0 0 30px rgba(var(--diva-violet)/.1);
+}
+
+/* Editorial section presence. Active scene gets a restrained light response. */
+[data-diva-active="true"]{
+  --diva-local-energy:1;
+}
+.manifesto[data-diva-active="true"] h2,
+.tattoos[data-diva-active="true"] .tattoo-copy h2,
+.archive[data-diva-active="true"] .archive-head h2,
+.private-side[data-diva-active="true"] h2,
+.threshold[data-diva-active="true"] h2,
+.cta[data-diva-active="true"] h3{
+  text-shadow:0 0 42px rgba(var(--diva-gold)/.055);
+}
+
+/* Luxury micro-reflection on actions. */
+.button{
+  --mag-x:0px;
+  --mag-y:0px;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  transform:translate3d(var(--mag-x),var(--mag-y),0);
+}
+.button:after{
+  content:'';
+  position:absolute;
+  z-index:2;
+  top:-120%;
+  bottom:-120%;
+  width:38%;
+  left:-52%;
+  transform:rotate(17deg);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);
+  opacity:0;
+  pointer-events:none;
+}
+.button:hover{
+  transform:translate3d(var(--mag-x),calc(var(--mag-y) - 2px),0);
+}
+.button:hover:after{
+  opacity:.72;
+  animation:divaGlint .85s cubic-bezier(.2,.7,.2,1) forwards;
+}
+@keyframes divaGlint{to{left:118%}}
+
+/* Carousel bus feedback: the archive receives a tiny pulse when Runtime v2 changes frame. */
+.archive-carousel.diva-frame-pulse .carousel-viewport{
+  animation:divaFramePulse .62s ease-out;
+}
+@keyframes divaFramePulse{
+  0%{filter:brightness(1)}
+  28%{filter:brightness(1.045)}
+  100%{filter:brightness(1)}
+}
+
+/* Fine-pointer cursor jewel. It reads as a stage light cue, not a replacement cursor. */
+.diva-cursor{
+  position:fixed;
+  z-index:130;
+  left:0;
+  top:0;
+  width:9px;
+  height:9px;
+  margin:-4.5px 0 0 -4.5px;
+  border-radius:50%;
+  pointer-events:none;
+  opacity:0;
+  background:rgba(236,210,160,.9);
+  box-shadow:0 0 0 5px rgba(var(--diva-gold)/.07),0 0 24px rgba(var(--diva-violet)/.35);
+  transform:translate3d(var(--cursor-x,50vw),var(--cursor-y,50vh),0) scale(.8);
+  transition:opacity .25s ease,box-shadow .25s ease,transform .08s linear;
+}
+body.diva-pointer-active .diva-cursor{opacity:.72}
+body.diva-pointer-action .diva-cursor{
+  box-shadow:0 0 0 9px rgba(var(--diva-gold)/.09),0 0 34px rgba(var(--diva-violet)/.42);
+}
+
+body.diva-sleep .diva-aura,
+body.diva-sleep .diva-cursor{opacity:0!important}
+
+@media(max-width:900px){
+  .diva-stage-label{left:14px;bottom:14px;font-size:7px;letter-spacing:.18em;opacity:.72}
+  .diva-aura{opacity:.08;mix-blend-mode:normal}
+  .hero-image:before{background:radial-gradient(ellipse 44vw 30vh at 68% 32%,rgba(255,232,190,.075),transparent 72%)}
+}
+
+@media(hover:none),(pointer:coarse){
+  .diva-cursor{display:none}
+  .button,.button:hover{--mag-x:0px;--mag-y:0px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .diva-aura{opacity:.07!important;transition:none}
+  .diva-cursor{display:none}
+  .diva-stage-label{transition:none}
+  .button:after{display:none}
+  .archive-carousel.diva-frame-pulse .carousel-viewport{animation:none}
+}
