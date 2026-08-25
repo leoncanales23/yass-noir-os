@@ -143,9 +143,8 @@
   }
 
   let framePulseTimer = 0;
-  body.addEventListener('yn:carouselchange', event => {
-    const carousel = document.querySelector('.archive-carousel');
-    if (!carousel) return;
+  const carousel = document.querySelector('.archive-carousel');
+  carousel?.addEventListener('yn:carouselchange', event => {
     const detail = event.detail || {};
     const index = Number(detail.index || 0);
     const total = Math.max(1, Number(detail.total || 1));
