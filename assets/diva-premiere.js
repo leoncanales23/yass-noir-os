@@ -2,8 +2,20 @@
   if (document.documentElement.dataset.divaPremiere === 'v1') return;
   document.documentElement.dataset.divaPremiere = 'v1';
 
-  const premiere = document.querySelector('.diva-premiere');
+  const premiere = document.querySelector('.diva-premiere') || document.querySelector('.loader');
   if (!premiere) return;
+
+  if (premiere.classList.contains('loader')) {
+    premiere.className = 'diva-premiere';
+    premiere.setAttribute('aria-hidden', 'true');
+    premiere.innerHTML = `
+      <div class="premiere-core">
+        <div class="premiere-halo"></div>
+        <img class="premiere-logo" src="/assets/yass-noir-logo.svg?v=3" alt="" width="350" height="230">
+        <div class="premiere-line"></div>
+        <div class="premiere-credit">A private identity · VibraAlto</div>
+      </div>`;
+  }
 
   const body = document.body;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -49,13 +61,13 @@
       performance.measure?.('yn-premiere', 'yn-premiere-start', 'yn-premiere-end');
     } catch {}
 
-    const detail = {
-      mode: encore ? 'encore' : 'premiere',
-      duration,
-      source
-    };
-
-    body.dispatchEvent(new CustomEvent('yn:premiereend', { detail }));
+    body.dispatchEvent(new CustomEvent('yn:premiereend', {
+      detail: {
+        mode: encore ? 'encore' : 'premiere',
+        duration,
+        source
+      }
+    }));
 
     window.setTimeout(() => premiere.remove(), 80);
   };
