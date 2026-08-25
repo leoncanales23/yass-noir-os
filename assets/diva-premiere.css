@@ -1,0 +1,170 @@
+:root{
+  --premiere-duration:1550ms;
+  --premiere-ease:cubic-bezier(.2,.72,.2,1);
+}
+
+body.premiere-lock{overflow:hidden}
+
+.diva-premiere{
+  position:fixed;
+  inset:0;
+  z-index:180;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 50% 46%,rgba(199,163,106,.055),transparent 26%),
+    radial-gradient(circle at 50% 48%,rgba(179,72,208,.045),transparent 44%),
+    #050505;
+  color:#f1ece6;
+  isolation:isolate;
+  pointer-events:auto;
+  opacity:1;
+  visibility:visible;
+}
+
+.diva-premiere::before,
+.diva-premiere::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+.diva-premiere::before{
+  z-index:1;
+  background:
+    linear-gradient(90deg,transparent 0 42%,rgba(255,244,220,.04) 49.4%,rgba(199,163,106,.11) 50%,rgba(255,244,220,.04) 50.6%,transparent 58%),
+    radial-gradient(ellipse 12vw 70vh at 50% 50%,rgba(199,163,106,.08),transparent 72%);
+  transform:translateX(-46vw) skewX(-7deg);
+  opacity:0;
+}
+
+.diva-premiere::after{
+  z-index:4;
+  background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.28));
+  opacity:.65;
+}
+
+.premiere-core{
+  position:relative;
+  z-index:3;
+  width:min(720px,88vw);
+  display:grid;
+  place-items:center;
+  text-align:center;
+}
+
+.premiere-halo{
+  position:absolute;
+  width:min(52vw,620px);
+  aspect-ratio:1;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(199,163,106,.11),rgba(179,72,208,.035) 35%,transparent 70%);
+  filter:blur(18px);
+  opacity:0;
+  transform:scale(.72);
+}
+
+.premiere-logo{
+  position:relative;
+  z-index:2;
+  width:clamp(190px,26vw,350px);
+  height:auto;
+  opacity:0;
+  transform:translateY(10px) scale(.965);
+  filter:drop-shadow(0 10px 34px rgba(0,0,0,.62));
+}
+
+.premiere-line{
+  position:relative;
+  z-index:3;
+  width:min(420px,62vw);
+  height:1px;
+  margin-top:18px;
+  overflow:hidden;
+  background:rgba(255,255,255,.045);
+  opacity:0;
+}
+
+.premiere-line::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  transform:translateX(-105%);
+  background:linear-gradient(90deg,transparent,rgba(199,163,106,.92),rgba(241,236,230,.75),rgba(179,72,208,.42),transparent);
+  box-shadow:0 0 20px rgba(199,163,106,.4);
+}
+
+.premiere-credit{
+  position:relative;
+  z-index:3;
+  margin-top:14px;
+  font:500 7px/1.4 Inter,sans-serif;
+  letter-spacing:.36em;
+  text-transform:uppercase;
+  color:rgba(199,163,106,.62);
+  opacity:0;
+  transform:translateY(5px);
+}
+
+.diva-premiere.is-playing .premiere-halo{animation:premiereHalo var(--premiere-duration) var(--premiere-ease) both}
+.diva-premiere.is-playing .premiere-logo{animation:premiereLogo var(--premiere-duration) var(--premiere-ease) both}
+.diva-premiere.is-playing .premiere-line{animation:premiereLine var(--premiere-duration) linear both}
+.diva-premiere.is-playing .premiere-line::after{animation:premiereSweep var(--premiere-duration) var(--premiere-ease) both}
+.diva-premiere.is-playing .premiere-credit{animation:premiereCredit var(--premiere-duration) var(--premiere-ease) both}
+.diva-premiere.is-playing::before{animation:premiereFlare var(--premiere-duration) var(--premiere-ease) both}
+.diva-premiere.is-playing{animation:premiereExit var(--premiere-duration) var(--premiere-ease) both}
+
+body.premiere-running .top,
+body.premiere-running .progress,
+body.premiere-running .diva-stage-label,
+body.premiere-running .diva-aura,
+body.premiere-running .diva-cursor{opacity:0!important}
+
+body.premiere-running .hero-copy,
+body.premiere-running .hero-accent{opacity:0;transform:translateY(10px)}
+
+body.premiere-done .hero-copy,
+body.premiere-done .hero-accent{transition:opacity .7s ease,transform .9s cubic-bezier(.2,.7,.2,1)}
+
+body.premiere-arrival .hero-accent-line{animation:premiereHeroLine .9s ease-out both}
+
+@keyframes premiereHalo{
+  0%,10%{opacity:0;transform:scale(.72)}
+  34%{opacity:.66;transform:scale(.92)}
+  62%{opacity:.42;transform:scale(1.04)}
+  100%{opacity:0;transform:scale(1.16)}
+}
+
+@keyframes premiereLogo{
+  0%,12%{opacity:0;transform:translateY(10px) scale(.965);filter:brightness(.7) drop-shadow(0 10px 34px rgba(0,0,0,.62))}
+  34%{opacity:.92;transform:translateY(0) scale(1);filter:brightness(1.04) drop-shadow(0 10px 34px rgba(0,0,0,.62))}
+  67%{opacity:1;transform:translateY(0) scale(1.008);filter:brightness(1.16) drop-shadow(0 0 24px rgba(199,163,106,.12))}
+  100%{opacity:0;transform:translateY(-3px) scale(1.018);filter:brightness(.92) drop-shadow(0 10px 34px rgba(0,0,0,.62))}
+}
+
+@keyframes premiereLine{0%,24%{opacity:0}34%,72%{opacity:1}100%{opacity:0}}
+@keyframes premiereSweep{0%,28%{transform:translateX(-105%)}66%,100%{transform:translateX(105%)}}
+@keyframes premiereCredit{0%,30%{opacity:0;transform:translateY(5px)}44%,72%{opacity:.9;transform:translateY(0)}100%{opacity:0;transform:translateY(-2px)}}
+@keyframes premiereFlare{0%,30%{opacity:0;transform:translateX(-46vw) skewX(-7deg)}46%{opacity:.7}67%{opacity:.16;transform:translateX(46vw) skewX(-7deg)}100%{opacity:0;transform:translateX(52vw) skewX(-7deg)}}
+@keyframes premiereExit{0%,72%{opacity:1;visibility:visible}92%{opacity:0;visibility:visible}100%{opacity:0;visibility:hidden;pointer-events:none}}
+@keyframes premiereHeroLine{0%{filter:brightness(1);box-shadow:none}26%{filter:brightness(1.3);box-shadow:0 0 28px rgba(199,163,106,.34),0 0 54px rgba(179,72,208,.15)}100%{filter:brightness(1);box-shadow:0 0 18px rgba(199,163,106,.2),0 0 30px rgba(179,72,208,.1)}}
+
+.diva-premiere.is-encore{--premiere-duration:420ms}
+.diva-premiere.is-encore .premiere-credit,
+.diva-premiere.is-encore .premiere-line{display:none}
+.diva-premiere.is-encore .premiere-logo{width:clamp(160px,21vw,280px)}
+
+@media(max-width:700px){
+  .premiere-logo{width:min(280px,72vw)}
+  .premiere-line{width:62vw}
+  .premiere-credit{font-size:6px;letter-spacing:.28em}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .diva-premiere{--premiere-duration:160ms}
+  .diva-premiere::before,.premiere-halo,.premiere-line,.premiere-credit{display:none}
+  .premiere-logo{opacity:1;transform:none;filter:none}
+  body.premiere-running .hero-copy,body.premiere-running .hero-accent{transform:none}
+}
