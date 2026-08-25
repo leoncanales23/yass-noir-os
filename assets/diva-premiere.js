@@ -45,9 +45,15 @@
   let finished = false;
   let arrivalTimer = 0;
 
+  const onAnimationEnd = event => {
+    if (event.target !== premiere || event.animationName !== 'premiereExit') return;
+    finish('animationend');
+  };
+
   const finish = source => {
     if (finished) return;
     finished = true;
+    premiere.removeEventListener('animationend', onAnimationEnd);
 
     body.classList.remove('premiere-lock', 'premiere-running');
     body.classList.add('premiere-done', 'premiere-arrival');
@@ -72,12 +78,7 @@
     window.setTimeout(() => premiere.remove(), 80);
   };
 
-  const onAnimationEnd = event => {
-    if (event.target !== premiere || event.animationName !== 'premiereExit') return;
-    finish('animationend');
-  };
-
-  premiere.addEventListener('animationend', onAnimationEnd, { once: true });
+  premiere.addEventListener('animationend', onAnimationEnd);
 
   requestAnimationFrame(() => {
     premiere.dataset.state = 'playing';
