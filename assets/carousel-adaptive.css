@@ -1,0 +1,87 @@
+/* Adaptive gallery presentation — additive layer over Carousel Runtime v2. */
+.archive-carousel[data-presentation="adaptive"]{
+  max-width:min(1320px,96vw);
+}
+.archive-carousel[data-presentation="adaptive"] .carousel-viewport{
+  border:1px solid rgba(199,163,106,.28);
+  background:
+    radial-gradient(circle at 50% 45%,rgba(199,163,106,.055),transparent 35%),
+    #040404;
+  box-shadow:0 34px 120px rgba(0,0,0,.64),0 0 0 1px rgba(255,255,255,.018) inset;
+}
+.archive-carousel[data-presentation="adaptive"] .carousel-slide{
+  height:min(82svh,880px);
+  min-height:560px;
+  padding:clamp(28px,4vw,58px) clamp(42px,6vw,88px);
+}
+.archive-carousel[data-presentation="adaptive"] .carousel-slide img{
+  width:auto;
+  height:auto;
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  object-position:center;
+  transform:none!important;
+  border:1px solid rgba(241,236,230,.1);
+  box-shadow:0 30px 100px rgba(0,0,0,.68),0 0 0 8px rgba(255,255,255,.018);
+}
+.archive-carousel[data-presentation="adaptive"] .carousel-slide.is-portrait img{
+  max-width:min(62%,650px);
+  max-height:100%;
+}
+.archive-carousel[data-presentation="adaptive"] .carousel-slide.is-landscape img{
+  max-width:100%;
+  max-height:100%;
+}
+.archive-carousel[data-presentation="adaptive"] .carousel-slide:not(.is-active) img{
+  transform:none;
+}
+.archive-carousel[data-presentation="adaptive"] .carousel-slide.is-active img{
+  transform:none;
+  animation:ynGalleryArrival .9s cubic-bezier(.2,.72,.2,1) both;
+}
+.archive-carousel[data-presentation="adaptive"] .carousel-slide:after{
+  background:
+    linear-gradient(90deg,rgba(3,3,3,.52),transparent 18%,transparent 82%,rgba(3,3,3,.52)),
+    linear-gradient(180deg,rgba(3,3,3,.12),transparent 24%,transparent 76%,rgba(3,3,3,.2));
+}
+.archive-carousel[data-presentation="adaptive"] .carousel-count{
+  left:clamp(16px,2.5vw,34px);
+  bottom:clamp(16px,2.5vw,30px);
+}
+@keyframes ynGalleryArrival{
+  from{opacity:.35;filter:saturate(.75) contrast(1.01) brightness(.82)}
+  to{opacity:1;filter:saturate(.9) contrast(1.03) brightness(.96)}
+}
+@media(max-width:900px){
+  .archive-carousel[data-presentation="adaptive"]{max-width:100%}
+  .archive-carousel[data-presentation="adaptive"] .carousel-slide{
+    height:min(76svh,720px);
+    min-height:500px;
+    padding:28px 18px 44px;
+  }
+  .archive-carousel[data-presentation="adaptive"] .carousel-slide.is-portrait img{
+    max-width:92%;
+    max-height:100%;
+  }
+  .archive-carousel[data-presentation="adaptive"] .carousel-slide.is-landscape img{
+    max-width:100%;
+    max-height:82%;
+  }
+}
+@media(max-width:540px){
+  .social{gap:11px}
+  .archive-carousel[data-presentation="adaptive"] .carousel-slide{
+    height:min(72svh,660px);
+    min-height:470px;
+    padding:22px 10px 40px;
+  }
+  .archive-carousel[data-presentation="adaptive"] .carousel-slide.is-portrait img{max-width:96%}
+  .archive-carousel[data-presentation="adaptive"] .carousel-button{top:auto;bottom:12px}
+  .archive-carousel[data-presentation="adaptive"] .carousel-button.prev{left:auto;right:62px}
+  .archive-carousel[data-presentation="adaptive"] .carousel-button.next{right:12px}
+  .archive-carousel[data-presentation="adaptive"] .carousel-count{left:12px;bottom:15px}
+}
+@media(prefers-reduced-motion:reduce){
+  .archive-carousel[data-presentation="adaptive"] .carousel-slide.is-active img{animation:none}
+}
