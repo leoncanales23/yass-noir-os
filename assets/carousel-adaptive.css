@@ -1,120 +1,162 @@
-/* Editorial reveal — preserves every photograph without cropping or oversized framing. */
+/* Open editorial gallery v3 — the complete photograph always remains visible. */
 .archive-carousel[data-presentation="adaptive"]{
   max-width:min(1480px,100%);
+  padding-inline:clamp(8px,2.2vw,34px);
 }
 
 .archive-carousel[data-presentation="adaptive"] .carousel-viewport{
   border:0;
   background:transparent;
   box-shadow:none;
-  transition:height .72s cubic-bezier(.2,.72,.2,1);
 }
 
 .archive-carousel[data-presentation="adaptive"] .carousel-viewport:before,
 .archive-carousel[data-presentation="adaptive"] .carousel-viewport:after{
-  opacity:.22;
+  display:none;
 }
 
 .archive-carousel[data-presentation="adaptive"] .carousel-slide{
-  height:clamp(420px,calc(100svh - 220px),760px);
+  height:clamp(360px,calc(100svh - 210px),760px);
   min-height:0;
-  padding:clamp(10px,1.8vw,24px) clamp(38px,6vw,92px);
+  padding:clamp(14px,2.2vw,30px) clamp(48px,6vw,96px) clamp(46px,4.5vw,64px);
+  overflow:hidden;
   background:transparent;
-  transition:height .72s cubic-bezier(.2,.72,.2,1);
 }
 
+/* Keep only a quiet atmospheric echo; the stage no longer looks like a box. */
 .archive-carousel[data-presentation="adaptive"] .carousel-slide:before{
-  inset:4% 1%;
-  opacity:.34;
-  filter:blur(48px) saturate(.52) brightness(.3);
-  transform:scale(1.02);
+  inset:14% 7%;
+  opacity:.16;
+  filter:blur(62px) saturate(.46) brightness(.34);
+  transform:scale(1);
 }
 
 .archive-carousel[data-presentation="adaptive"] .carousel-slide:after{
-  background:radial-gradient(circle at 50% 48%,rgba(179,72,208,.055),transparent 46%);
+  display:none;
 }
 
+/* A 100% media box plus object-fit is deliberate: unlike auto sizing, it
+   constrains both portrait and landscape sources to the visible stage. */
 .archive-carousel[data-presentation="adaptive"] .carousel-slide img,
 .archive-carousel[data-presentation="adaptive"] .carousel-slide.is-portrait img,
-.archive-carousel[data-presentation="adaptive"] .carousel-slide.is-landscape img{
-  width:auto;
-  height:auto;
-  max-width:100%;
-  max-height:100%;
+.archive-carousel[data-presentation="adaptive"] .carousel-slide.is-landscape img,
+.archive-carousel[data-presentation="adaptive"] .carousel-slide.is-square img{
+  position:relative;
+  z-index:2;
+  display:block;
+  width:100%;
+  height:100%;
+  max-width:none;
+  max-height:none;
   object-fit:contain;
   object-position:center;
-  transform:none!important;
   border:0;
-  box-shadow:0 26px 80px rgba(0,0,0,.42);
+  box-shadow:none;
+  filter:saturate(.9) contrast(1.025) brightness(.97) drop-shadow(0 24px 38px rgba(0,0,0,.28));
+  transform-origin:center;
 }
 
-.archive-carousel[data-presentation="adaptive"] .carousel-slide.is-portrait img{
-  max-width:min(72%,620px);
+.archive-carousel[data-presentation="adaptive"] .carousel-slide:not(.is-active) img{
+  opacity:.18;
+  transform:translateY(10px) scale(.985);
 }
 
 .archive-carousel[data-presentation="adaptive"] .carousel-slide.is-active img{
-  animation:ynEditorialReveal .95s cubic-bezier(.2,.72,.2,1) both;
+  opacity:1;
+  animation:ynOpenEditorial .9s cubic-bezier(.2,.72,.2,1) both;
 }
 
 .archive-carousel[data-presentation="adaptive"] .carousel-count{
-  left:clamp(18px,3vw,46px);
-  bottom:clamp(16px,2vw,28px);
+  left:clamp(54px,7vw,106px);
+  bottom:clamp(13px,1.8vw,24px);
+  padding:7px 0 7px 13px;
   border:0;
-  border-left:1px solid rgba(199,163,106,.48);
-  background:rgba(5,5,5,.28);
+  border-left:1px solid rgba(199,163,106,.52);
+  background:transparent;
   box-shadow:none;
+  backdrop-filter:none;
 }
 
-.archive-carousel[data-presentation="adaptive"] .carousel-button.prev{left:clamp(8px,1.8vw,28px)}
-.archive-carousel[data-presentation="adaptive"] .carousel-button.next{right:clamp(8px,1.8vw,28px)}
+.archive-carousel[data-presentation="adaptive"] .carousel-button{
+  border-color:rgba(199,163,106,.3);
+  background:rgba(5,5,5,.34);
+  box-shadow:none;
+}
+.archive-carousel[data-presentation="adaptive"] .carousel-button.prev{left:clamp(8px,2vw,32px)}
+.archive-carousel[data-presentation="adaptive"] .carousel-button.next{right:clamp(8px,2vw,32px)}
 
-@keyframes ynEditorialReveal{
-  from{opacity:.25;filter:saturate(.72) contrast(1.01) brightness(.78);clip-path:inset(0 7% 0 7%)}
-  to{opacity:1;filter:saturate(.9) contrast(1.03) brightness(.96);clip-path:inset(0 0 0 0)}
+.archive-carousel[data-presentation="adaptive"] .carousel-dots{
+  margin-top:clamp(14px,2vw,24px);
+}
+
+@keyframes ynOpenEditorial{
+  from{opacity:.18;transform:translateY(14px) scale(.982);filter:saturate(.7) contrast(1.01) brightness(.82)}
+  to{opacity:1;transform:translateY(0) scale(1);filter:saturate(.9) contrast(1.025) brightness(.97) drop-shadow(0 24px 38px rgba(0,0,0,.28))}
 }
 
 @media(max-width:900px){
-  .archive-carousel[data-presentation="adaptive"]{max-width:100%}
-  .archive-carousel[data-presentation="adaptive"] .carousel-slide{
-    height:min(72svh,640px);
-    min-height:0;
-    padding:10px 10px 46px;
-  }
-  .archive-carousel[data-presentation="adaptive"] .carousel-slide.is-portrait img{
-    max-width:96%;
-    max-height:100%;
-  }
-  .archive-carousel[data-presentation="adaptive"] .carousel-slide.is-landscape img{
+  .archive-carousel[data-presentation="adaptive"]{
     max-width:100%;
-    max-height:100%;
+    padding-inline:4px;
+  }
+  .archive-carousel[data-presentation="adaptive"] .carousel-slide{
+    height:clamp(330px,calc(100svh - 190px),620px);
+    min-height:0;
+    padding:12px 46px 48px;
   }
   .archive-carousel[data-presentation="adaptive"] .carousel-slide:before{
-    inset:8% 0;
-    filter:blur(28px) saturate(.5) brightness(.27);
+    inset:18% 4%;
+    opacity:.12;
+    filter:blur(34px) saturate(.44) brightness(.3);
+  }
+  .archive-carousel[data-presentation="adaptive"] .carousel-count{
+    left:52px;
+    bottom:13px;
   }
 }
 
-@supports selector(.carousel-viewport:has(.is-active)){
-  @media(max-width:900px){
-    .archive-carousel[data-presentation="adaptive"] .carousel-viewport:has(.is-active.is-landscape) .carousel-slide{
-      height:clamp(280px,calc((100vw - 20px)/1.5 + 52px),460px);
-    }
+/* Split-screen laptops and other short browser windows need their own stage. */
+@media(max-height:600px){
+  .archive-carousel[data-presentation="adaptive"] .carousel-slide{
+    height:max(220px,calc(100svh - 170px));
+    padding-top:8px;
+    padding-bottom:38px;
+  }
+  .archive-carousel[data-presentation="adaptive"] .carousel-dots{
+    margin-top:10px;
+  }
+  .archive-carousel[data-presentation="adaptive"] .carousel-count{
+    bottom:9px;
   }
 }
 
 @media(max-width:540px){
   .social{gap:11px}
   .archive-carousel[data-presentation="adaptive"] .carousel-slide{
-    padding:8px 6px 42px;
+    height:clamp(300px,calc(100svh - 170px),590px);
+    padding:10px 8px 50px;
   }
-  .archive-carousel[data-presentation="adaptive"] .carousel-button{top:auto;bottom:9px}
-  .archive-carousel[data-presentation="adaptive"] .carousel-button.prev{left:auto;right:58px}
+  .archive-carousel[data-presentation="adaptive"] .carousel-button{
+    top:auto;
+    bottom:7px;
+  }
+  .archive-carousel[data-presentation="adaptive"] .carousel-button.prev{
+    left:auto;
+    right:58px;
+  }
   .archive-carousel[data-presentation="adaptive"] .carousel-button.next{right:8px}
-  .archive-carousel[data-presentation="adaptive"] .carousel-count{left:8px;bottom:12px}
+  .archive-carousel[data-presentation="adaptive"] .carousel-count{left:9px;bottom:10px}
+}
+
+@media(max-width:540px) and (max-height:600px){
+  .archive-carousel[data-presentation="adaptive"] .carousel-slide{
+    height:max(220px,calc(100svh - 150px));
+  }
 }
 
 @media(prefers-reduced-motion:reduce){
-  .archive-carousel[data-presentation="adaptive"] .carousel-slide,
-  .archive-carousel[data-presentation="adaptive"] .carousel-viewport{transition:none}
-  .archive-carousel[data-presentation="adaptive"] .carousel-slide.is-active img{animation:none}
+  .archive-carousel[data-presentation="adaptive"] .carousel-slide.is-active img{
+    animation:none;
+    transform:none;
+  }
 }
